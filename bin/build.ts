@@ -1,6 +1,14 @@
 #!/usr/bin/env npx ts-node
 
 import { build } from 'esbuild';
+import { Export } from '../src/global/export';
+
+const globalFunctions: Array<string> = [];
+Object.entries(Export).forEach(([namespace, functionNameList]: [string, Array<string>]) => {
+  functionNameList.forEach((functionName: string) => {
+    globalFunctions.push(`function ${functionName}() {}`);
+  });
+});
 
 build({
   entryPoints: ['src/project.ts'],
@@ -15,6 +23,8 @@ build({
   },
   footer: {
     js: [
+      '',
+      ...globalFunctions,
       '',
       '// Copyright @debiru_R from https://github.com/debiru/clasp',
     ].join('\n'),

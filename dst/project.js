@@ -2,6 +2,166 @@
 // Top-level `var` declaration: https://esbuild.github.io/faq/#top-level-var
 
 (() => {
+  // .clasp.json
+  var clasp_default = {
+    spreadsheetId: "1Q6NgOGt9X2PaWMWYsAJf2S6IwisEKODzGNDnELxRa80",
+    scriptId: "1-_Han3yPynNQM8XWEuA7VQEhoVTWRBduXAq4EF4_1UWPDRFUpei5Iafo",
+    rootDir: "dst"
+  };
+
+  // src/global/index.ts
+  var SID = clasp_default.spreadsheetId;
+  var SHEETS = {
+    SCRIPTS: "scripts"
+  };
+
+  // src/Sheet/index.ts
+  var Sheet = {
+    get(sheetName) {
+      return SpreadsheetApp.openById(SID).getSheetByName(sheetName);
+    },
+    getCells(sheetName) {
+      const sheet = Sheet.get(sheetName);
+      if (sheet == null) return null;
+      return sheet.getDataRange().getValues();
+    },
+    getRecords(sheetName) {
+      const cells = Sheet.getCells(sheetName);
+      if (cells == null) return null;
+      const keys = cells.shift();
+      const records = cells.map((row) => {
+        const obj = {};
+        row.forEach((cell, i) => {
+          obj[String(keys[i])] = cell;
+        });
+        return obj;
+      });
+      keys.forEach((key) => {
+        const set = /* @__PURE__ */ new Set();
+        records.forEach((record) => set.add(record[key]));
+        if (set.size === 1 && set.has("")) {
+          records.map((record) => {
+            delete record[key];
+            return record;
+          });
+        }
+      });
+      return records;
+    },
+    getHeaders(sheetName) {
+      const cells = Sheet.getCells(sheetName);
+      if (cells == null) return null;
+      return cells.shift().map((v) => String(v));
+    }
+  };
+
+  // src/Util/index.ts
+  var Util = {
+    /**
+     * 値を JSON 文字列に変換する。
+     */
+    toJSON(arg) {
+      return JSON.stringify(arg, null, 2);
+    },
+    /**
+     * null または undefined または空文字列であれば true を返す。
+     */
+    empty(arg) {
+      return arg == null || arg === "";
+    },
+    /**
+     * %s プレースホルダーのみに対応した sprintf 関数。
+     */
+    sprintf(format, ...args) {
+      let p = 0;
+      return format.replace(/%./g, function(m) {
+        if (m === "%%") return "%";
+        if (m === "%s") return args[p++];
+        return m;
+      });
+    },
+    /**
+     * Object の key-value を新しい値で更新する。
+     * obj の他に valueCallback と keyCallback を引数に取る。
+     * callback 関数は引数に元の value と key をこの順に取る。
+     */
+    objMap(obj, valueCallback, keyCallback) {
+      if (valueCallback == null) valueCallback = (value) => value;
+      if (keyCallback == null) keyCallback = (value, key) => key;
+      const ret = {};
+      Object.entries(obj).forEach(([key, value]) => ret[keyCallback(value, key)] = valueCallback(value, key));
+      return ret;
+    },
+    /**
+     * keyArray と valueArray から Object を作成する。
+     * valueArray を指定しない場合、keyArray が使われる。
+     */
+    arrayCombine(keyArray, valueArray) {
+      if (valueArray == null) {
+        valueArray = keyArray;
+        keyArray = Object.keys(keyArray);
+      }
+      const ret = {};
+      for (let i = 0; i < keyArray.length; ++i) ret[keyArray[i]] = valueArray[i];
+      return ret;
+    }
+  };
+
+  // src/Entrypoint/index.ts
+  var Entrypoint = {
+    doGet(e) {
+      return Entrypoint.doMain(e);
+    },
+    doPost(e) {
+      return Entrypoint.doMain(e);
+    },
+    /**
+     * the "e" argument represents an event parameter that can contain information about any URL parameters.
+     * refs. https://developers.google.com/apps-script/guides/web
+     */
+    doMain(e) {
+      return Entrypoint.makeContent(
+        Entrypoint.makeResponse(e, () => Entrypoint.makeFormattedObject(e.parameter.type))
+      );
+    },
+    makeFormattedObject(type) {
+      const keyValueData = Entrypoint.makeObject();
+      return keyValueData;
+    },
+    makeObject() {
+      const jsonObj = Util.objMap(SHEETS, (value) => Sheet.getRecords(value), (value) => value);
+      return jsonObj;
+    },
+    makeResponse(e, callback) {
+      const data = callback();
+      const json = Util.toJSON(data);
+      const useJsonp = !Util.empty(e.parameter.callback);
+      const response = {
+        mime: useJsonp ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON,
+        content: (useJsonp ? Util.sprintf("%s(%s);", e.parameter.callback, json) : json) + "\n"
+      };
+      return response;
+    },
+    makeContent(response) {
+      return ContentService.createTextOutput(response.content).setMimeType(response.mime);
+    }
+  };
+
+  // src/global/export.ts
+  var Export = {
+    Entrypoint: ["doGet", "doPost"]
+  };
+
+  // src/project.ts
+  var variables = { Entrypoint, Sheet, Util };
+  Object.entries(Export).forEach(([namespace, functionNameList]) => {
+    functionNameList.forEach((functionName) => {
+      globalThis[functionName] = variables[namespace][functionName];
+    });
+  });
 })();
+
+function doGet() {}
+function doPost() {}
 
 // Copyright @debiru_R from https://github.com/debiru/clasp

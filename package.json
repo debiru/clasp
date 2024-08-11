@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@google/clasp": "^2.4.2",
+    "@types/google-apps-script": "^1.0.83",
     "@types/node": "^22.2.0",
     "esbuild": "^0.23.0",
     "ts-node": "^10.9.2"
