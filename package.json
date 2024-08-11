@@ -1,9 +1,27 @@
 {
+  "name": "clasp-example",
+  "version": "1.0.0",
   "devDependencies": {
     "@google/clasp": "^2.4.2",
     "@types/google-apps-script": "^1.0.83",
+    "@types/jest": "^29.5.12",
     "@types/node": "^22.2.0",
     "esbuild": "^0.23.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2"
+  },
+  "scripts": {
+    "deployments": "clasp deployments",
+    "deployment": "bin/getDeploymentId.sh",
+    "show": "bin/show.sh",
+    "test": "jest --passWithNoTests",
+    "prebuild": "npm run test",
+    "build": "bin/build.ts",
+    "prepush": "npm run build",
+    "push": "clasp push -f",
+    "preforce-push": "bin/build.ts",
+    "force-push": "clasp push -f",
+    "deploy": "bin/deploy.sh"
   }
 }
