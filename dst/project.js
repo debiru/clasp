@@ -12,7 +12,16 @@
   // src/global/index.ts
   var SID = clasp_default.spreadsheetId;
   var SHEETS = {
-    SCRIPTS: "scripts"
+    SCRIPTS: "scripts",
+    UNKNOWN: "unknown"
+  };
+  var COL = {
+    SCRIPT_NAME: "scriptName",
+    COMMAND: "command",
+    UNKNOWN: "unknown"
+  };
+  var JSON_FIELDS = {
+    [SHEETS.SCRIPTS]: SHEETS.SCRIPTS
   };
 
   // src/Sheet/index.ts
@@ -129,7 +138,7 @@
       return keyValueData;
     },
     makeObject() {
-      const jsonObj = Util.objMap(SHEETS, (value) => Sheet.getRecords(value), (value) => value);
+      const jsonObj = Util.objMap(JSON_FIELDS, (value) => Sheet.getRecords(value));
       return jsonObj;
     },
     makeResponse(e, callback) {
