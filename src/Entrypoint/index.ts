@@ -1,4 +1,4 @@
-import { SHEETS } from "../global";
+import { JSON_FIELDS, SHEETS } from "../global";
 import { Sheet } from "../Sheet";
 import { Util } from "../Util";
 
@@ -29,7 +29,7 @@ export const Entrypoint = {
   },
 
   makeObject() {
-    const jsonObj = Util.objMap(SHEETS, (value: string) => Sheet.getRecords(value), (value: string) => value);
+    const jsonObj = Util.objMap(JSON_FIELDS, (value: string) => Sheet.getRecords(value));
     return jsonObj;
   },
 
